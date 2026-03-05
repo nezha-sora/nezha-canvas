@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>哪吒 · 无限画布</title>
+    <title>哪吒 · 无限画布 </title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <style>
         :root {
             --nezha-red: #ff4d4f;
-            --glass-bg: rgba(255, 255, 255, 0.75); 
-            --text-main: #2c3e50;
+            --glass-bg: rgba(255, 255, 255, 0.88); 
+            --text-main: #1a1a1a;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
 
         body, html {
             width: 100%; height: 100%;
-            background-color: #e0e0e2; 
+            background-color: #edeff2; 
             font-family: "SF Pro SC","HanSans-Normal","PingFang SC", sans-serif;
             color: var(--text-main);
             overflow: hidden;
@@ -25,89 +25,102 @@
         .ambient-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: 
-                radial-gradient(circle at 25% 30%, rgba(255, 77, 79, 0.1) 0%, transparent 60%),
-                linear-gradient(135deg, #e0e0e2 0%, #bdc3c7 100%);
+                radial-gradient(circle at 10% 10%, rgba(255, 77, 79, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 90% 90%, rgba(64, 169, 255, 0.05) 0%, transparent 50%),
+                linear-gradient(135deg, #edeff2 0%, #dcdde1 100%);
             z-index: -2;
         }
 
+        /* 拖拽覆盖层 */
         #drag-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 77, 79, 0.15); border: 4px dashed var(--nezha-red);
             z-index: 5000; pointer-events: none; justify-content: center; align-items: center;
-            color: var(--nezha-red); font-size: 24px; font-weight: bold; backdrop-filter: blur(4px);
+            color: var(--nezha-red); font-size: 24px; font-weight: bold; backdrop-filter: blur(5px);
         }
 
+        /* 登录界面 */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .login-card { width: 400px; padding: 50px 40px; background: rgba(255, 255, 255, 0.5); backdrop-filter: blur(30px); border-radius: 32px; text-align: center; }
+        .login-card { width: 380px; padding: 45px; background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(25px); border-radius: 30px; text-align: center; box-shadow: 0 15px 45px rgba(0,0,0,0.06); border: 1px solid rgba(255,255,255,0.4); }
         
         #main-app { display: none; width: 100%; height: 100%; }
 
+        /* 左侧控制台 */
         #controls {
             position: absolute; top: 20px; left: 20px; z-index: 100;
-            width: 350px; max-height: 96vh; padding: 25px;
-            background: var(--glass-bg); backdrop-filter: blur(25px);
-            border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 24px;
+            width: 350px; max-height: 94vh; padding: 24px;
+            background: var(--glass-bg); backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 26px;
             overflow-y: auto; scrollbar-width: none;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
         }
 
-        h3 { font-size: 18px; margin-bottom: 20px; border-left: 4px solid var(--nezha-red); padding-left: 10px; }
-        label { display: block; margin: 15px 0 6px; font-size: 10px; color: #666; font-weight: bold; }
+        h3 { font-size: 17px; margin-bottom: 18px; border-left: 5px solid var(--nezha-red); padding-left: 12px; font-weight: 800; letter-spacing: 0.5px; }
+        label { display: block; margin: 14px 0 6px; font-size: 11px; color: #777; font-weight: 800; text-transform: uppercase; }
         
         select, textarea, input {
-            width: 100%; padding: 12px; border-radius: 10px;
-            background: #fff; border: 1px solid #ddd; color: #333; font-size: 13px; outline: none;
+            width: 100%; padding: 11px; border-radius: 12px;
+            background: #fff; border: 1.5px solid #eee; color: #333; font-size: 13px; outline: none; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        select:focus, input:focus, textarea:focus { border-color: var(--nezha-red); background: #fff; box-shadow: 0 0 0 3px rgba(255,77,79,0.08); }
 
-        .res-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 5px; }
-        .res-option { padding: 8px; border-radius: 8px; background: #eee; border: 1px solid #ddd; text-align: center; cursor: pointer; font-size: 11px; }
-        .res-option.active { background: var(--nezha-red); color: #fff; }
-        .res-option.locked { opacity: 0.3; cursor: not-allowed; }
+        .res-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .res-option { padding: 9px; border-radius: 10px; background: #f5f5f7; border: 1.5px solid transparent; text-align: center; cursor: pointer; font-size: 11px; font-weight: 600; color: #666; transition: 0.2s; }
+        .res-option.active { background: #fff; color: var(--nezha-red); border-color: var(--nezha-red); box-shadow: 0 4px 10px rgba(255,77,79,0.1); }
+        .res-option.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
 
-        .slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-        .slot { height: 75px; border: 1.5px dashed #ccc; border-radius: 10px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; }
-        .slot.active { border-style: solid; border-color: var(--nezha-red); background: #fff; }
+        .slot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .slot { height: 75px; border: 2px dashed #e0e0e0; border-radius: 14px; background: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; transition: 0.3s; }
+        .slot:hover { border-color: var(--nezha-red); background: #fff; }
+        .slot.active { border-style: solid; border-color: var(--nezha-red); background: #fff; box-shadow: 0 4px 12px rgba(255,77,79,0.1); }
         .slot img { width: 100%; height: 100%; object-fit: cover; }
-        .clear-slot { position: absolute; top: 0; right: 4px; color: var(--nezha-red); font-size: 16px; font-weight: bold; z-index: 10; }
+        .clear-slot { position: absolute; top: 2px; right: 6px; color: var(--nezha-red); font-size: 18px; font-weight: bold; z-index: 10; text-shadow: 0 0 4px #fff; }
 
-        #selection-tools { display: none; margin-bottom: 15px; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 12px; }
-        .assign-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 8px; }
-        .mini-btn { padding: 6px 2px; font-size: 9px; background: #fff; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; color: #666; font-weight: bold; }
+        #selection-tools { display: none; margin-top: 15px; background: rgba(255,77,79,0.04); padding: 12px; border-radius: 16px; border: 1px solid rgba(255,77,79,0.08); }
+        .assign-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
+        .mini-btn { padding: 6px; font-size: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .mini-btn:hover { border-color: var(--nezha-red); color: var(--nezha-red); }
 
-        .action-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%); color: #fff; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px; }
-        .secondary-btn { width: 100%; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; font-size: 11px; cursor: pointer; margin-bottom: 8px; }
+        .action-btn { width: 100%; padding: 15px; background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%); color: #fff; border: none; border-radius: 15px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 12px; box-shadow: 0 6px 20px rgba(255, 77, 79, 0.3); transition: transform 0.2s, opacity 0.2s; }
+        .action-btn:active { transform: scale(0.98); }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+        .secondary-btn { width: 100%; padding: 11px; background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; font-size: 12px; cursor: pointer; margin-bottom: 8px; font-weight: 600; color: #444; }
         
         canvas { position: absolute; top: 0; left: 0; z-index: 1; }
-        #status { margin-top: 10px; font-size: 11px; color: var(--nezha-red); font-weight: bold; text-align: center; }
+        #status { margin-top: 12px; font-size: 11px; color: var(--nezha-red); font-weight: 800; text-align: center; background: rgba(255,77,79,0.08); padding: 6px; border-radius: 8px; }
     </style>
 </head>
 <body>
 
-<div id="drag-overlay">✦ 灵光入画 · 松手导入原始图片 ✦</div>
+<div id="drag-overlay">✦ 灵光入画 · 无损原图已就绪 ✦</div>
 <div class="ambient-bg"></div>
 
 <div id="login-screen">
     <div class="login-card">
-        <h1>哪吒 · 无限画布</h1>
-        <p style="color:#888; font-size:12px; margin-bottom:30px;">(造物无垠 · 灵感共生 )</p>
+        <h1 style="letter-spacing:-1px; margin-bottom:5px;">哪吒 · 无限画布</h1>
+        <p style="color:#aaa; font-size:10px; margin-bottom:30px; letter-spacing: 3px; font-weight:bold;">造物无垠·灵感共生</p>
         <input type="text" id="user" placeholder="灵感账号">
-        <input type="password" id="pass" placeholder="通行密钥" style="margin-top:10px">
-        <button class="action-btn" onclick="login()">开启创作空间</button>
+        <input type="password" id="pass" placeholder="通行密钥" style="margin-top:12px">
+        <button class="action-btn" onclick="login()">进入创作空间</button>
     </div>
 </div>
 
 <div id="main-app">
     <div id="controls">
-        <h3>控制台</h3>
+        <h3>模型控制台</h3>
         
         <label>API KEY</label>
-        <input type="password" id="apiKey" placeholder="输入 Key">
-        <select id="apiType" style="margin-top:8px">
-            <option value="gemini">Gemini (Nano Banana)</option>
-            <option value="openai">OpenAI (DALL-E 3)</option>
+        <input type="password" id="apiKey" placeholder="输入 kay 密钥">
+        
+        <label>模型引擎 (模型选择)</label>
+        <select id="apiType">
+            <option value="flash">Gemini 3.1 Flash (Preview)</option>
+            <option value="openai">OpenAI Chat (DALL-E 3)</option>
+            <option value="pro">Gemini 3 Pro (Preview)</option>
         </select>
 
         <label>画布比例</label>
-        <div id="ratio-hint" style="font-size: 9px; color: var(--nezha-red); margin-bottom: 5px; display: none; font-weight:bold;">✨ 比例锁定模式 (跟随图1原始尺寸)</div>
+        <div id="ratio-hint" style="font-size: 9px; color: var(--nezha-red); margin-bottom: 5px; display: none; font-weight:bold;">✨ 比例已随图1锁定</div>
         <div class="res-grid">
             <div class="res-option active" data-res="1024x1024">1:1</div>
             <div class="res-option" data-res="1792x1024">16:9</div>
@@ -115,7 +128,7 @@
         </div>
         <input type="hidden" id="selectedRes" value="1024x1024">
 
-        <label>参考插槽 (无损参考)</label>
+        <label>原画参考插槽</label>
         <div class="slot-grid">
             <div class="slot" id="slot1" onclick="uploadToSlot(1)"><span class="clear-slot" onclick="event.stopPropagation(); clearSlot(1)">×</span><span id="s1-txt" style="font-size:9px;color:#bbb">图 1</span><img id="s1-img" style="display:none"></div>
             <div class="slot" id="slot2" onclick="uploadToSlot(2)"><span class="clear-slot" onclick="event.stopPropagation(); clearSlot(2)">×</span><span id="s2-txt" style="font-size:9px;color:#bbb">图 2</span><img id="s2-img" style="display:none"></div>
@@ -130,25 +143,25 @@
                 <button class="mini-btn" onclick="assignToSlot(3)">设为图3</button>
                 <button class="mini-btn" onclick="assignToSlot(4)">设为图4</button>
             </div>
-            <button onclick="downloadSelected()" class="secondary-btn" style="margin-bottom:0; background: #f6ffed; border-color: #b7eb8f; color: #389e0d; width:100%">💾 下载选中原画 (无损)</button>
+            <button onclick="downloadSelected()" class="secondary-btn" style="background:#f6ffed; color:#389e0d; border-color:#b7eb8f; margin-bottom:0; width:100%">💾 下载选中原画 (无损流)</button>
         </div>
 
-        <label>提示词 (PROMPT)</label>
-        <textarea id="prompt" rows="3" placeholder="描述你的需求..."></textarea>
+        <label>创意提示词</label>
+        <textarea id="prompt" rows="3" placeholder="描述你想要生成的艺术细节..."></textarea>
 
-        <label>运行次数 (BATCH)</label>
+        <label>自动化运行次数</label>
         <input type="number" id="runCount" value="1" min="1" max="50">
 
-        <button class="action-btn" onclick="runBatch()" id="runBtn">开始自动化生成</button>
-        <div id="status">等待指令...</div>
+        <button class="action-btn" onclick="runBatch()" id="runBtn">开始灵感生成</button>
+        <div id="status">系统就绪</div>
 
-        <div style="margin-top:20px; padding:10px; background:rgba(0,0,0,0.02); border-radius:12px;">
-            <button class="secondary-btn" onclick="pickSaveDirectory()">📁 关联自动保存路径</button>
-            <p id="dir-name" style="font-size:8px; color:#999; text-align:center;">未关联</p>
+        <div style="margin-top:15px; padding:12px; background:rgba(0,0,0,0.03); border-radius:14px; border:1px solid rgba(0,0,0,0.05);">
+            <button class="secondary-btn" onclick="pickSaveDirectory()">📁 关联自动保存文件夹</button>
+            <p id="dir-name" style="font-size:8px; color:#999; text-align:center;">批量生成将静默存储</p>
         </div>
 
-        <button onclick="deleteSelected()" id="btnDelete" disabled class="secondary-btn" style="color:#ff4d4f; border-color:#ff4d4f; margin-top:10px;">删除选中 (Del)</button>
-        <button onclick="exportCanvas()" class="secondary-btn" style="background:#eee; border:none;">导出高倍看板</button>
+        <button onclick="deleteSelected()" id="btnDelete" disabled class="secondary-btn" style="color:#ff4d4f; border-color:#ff4d4f; margin-top:10px;">删除选中图层 (Del)</button>
+        <button onclick="exportCanvas()" class="secondary-btn" style="background:#f0f2f5; border:none; margin-top:5px;">保存看板截图 (HD)</button>
     </div>
     <canvas id="c"></canvas>
 </div>
@@ -158,6 +171,7 @@
     let referenceData = { 1: null, 2: null, 3: null, 4: null };
     let slotRatio = null;
 
+    // 登录校验
     function login() {
         if (document.getElementById('user').value === 'liuxinke' && 
             document.getElementById('pass').value === '13162930037') {
@@ -165,22 +179,33 @@
             document.getElementById('main-app').style.display = 'block';
             initCanvas();
             initDragAndDrop();
+        } else {
+            alert("账号或密钥错误");
         }
     }
 
+    // 初始化画布
     function initCanvas() {
-        canvas = new fabric.Canvas('c', { width: window.innerWidth, height: window.innerHeight, backgroundColor: 'transparent' });
+        canvas = new fabric.Canvas('c', { 
+            width: window.innerWidth, 
+            height: window.innerHeight, 
+            backgroundColor: 'transparent',
+            preserveObjectStacking: true 
+        });
         
+        // 缩放功能
         canvas.on('mouse:wheel', opt => {
             let zoom = canvas.getZoom() * (0.999 ** opt.e.deltaY);
             canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, Math.min(Math.max(zoom, 0.05), 20));
             opt.e.preventDefault();
         });
 
+        // 选中UI监听
         canvas.on('selection:created', e => toggleSelectionUI(e.selected[0]));
         canvas.on('selection:updated', e => toggleSelectionUI(e.selected[0]));
         canvas.on('selection:cleared', () => toggleSelectionUI(null));
 
+        // 快捷键删除
         window.addEventListener('keydown', e => {
             if ((e.key === 'Delete' || e.key === 'Backspace') && 
                 document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
@@ -188,6 +213,7 @@
             }
         });
 
+        // 比例选择响应
         document.querySelectorAll('.res-option').forEach(opt => {
             opt.onclick = function() {
                 if (this.classList.contains('locked')) return;
@@ -204,26 +230,25 @@
         document.getElementById('selection-tools').style.display = isImg ? 'block' : 'none';
     }
 
-    // --- 核心修复：无损数据提取 ---
+    // 无损提取
     function downloadSelected() {
         const obj = canvas.getActiveObject();
         if (obj && obj.type === 'image') {
-            // 优先使用原始数据，如果没有（如极少数旧对象）则用最高质量导出
+            // 优先使用挂载的原始 Base64 数据
             const dataURL = obj._originalData || obj.toDataURL({ format: 'png', quality: 1 });
             const link = document.createElement('a');
-            link.download = `nezha_original_${Date.now()}.png`;
+            link.download = `nezha_lossless_${Date.now()}.png`;
             link.href = dataURL;
             link.click();
         }
     }
 
+    // 设为参考图
     function assignToSlot(n) {
         const obj = canvas.getActiveObject();
         if (obj && obj.type === 'image') {
-            // 直接传递原始未压缩 Base64
             const data = obj._originalData || obj.toDataURL({ format: 'png', quality: 1 });
             if (n === 1) {
-                // 计算比例（基于对象当前的视觉比例，但在 API 端我们会按原比例请求）
                 slotRatio = (obj.width * obj.scaleX) / (obj.height * obj.scaleY);
                 document.getElementById('ratio-hint').style.display = 'block';
                 document.querySelectorAll('.res-option').forEach(el => el.classList.add('locked'));
@@ -235,8 +260,9 @@
     function updateSlotUI(n, data) {
         referenceData[n] = data;
         document.getElementById(`s${n}-txt`).style.display = 'none';
-        document.getElementById(`s${n}-img`).src = data;
-        document.getElementById(`s${n}-img`).style.display = 'block';
+        const imgEl = document.getElementById(`s${n}-img`);
+        imgEl.src = data;
+        imgEl.style.display = 'block';
         document.getElementById(`slot${n}`).classList.add('active');
     }
 
@@ -252,6 +278,7 @@
         }
     }
 
+    // 本地文件上传到插槽
     function uploadToSlot(n) {
         const input = document.createElement('input');
         input.type = 'file'; input.accept = 'image/*';
@@ -276,22 +303,23 @@
         input.click();
     }
 
-    // --- 核心修复：入画时保留原始 Base64 ---
+    // 画布添加图片 (挂载原始数据)
     function addImageToCanvas(dataURL) {
         fabric.Image.fromURL(dataURL, img => {
             img.scaleToWidth(400);
             const vpt = canvas.viewportTransform;
-            const x = (canvas.width/2 - vpt[4])/vpt[0] + (Math.random()*60-30);
-            const y = (canvas.height/2 - vpt[5])/vpt[3] + (Math.random()*60-30);
-            img.set({ left: x, top: y, originX: 'center', originY: 'center' });
-            
-            // 重要：将原始不压缩的数据保存在对象内部
-            img._originalData = dataURL; 
-            
+            const x = (canvas.width/2 - vpt[4])/vpt[0] + (Math.random()*100-50);
+            const y = (canvas.height/2 - vpt[5])/vpt[3] + (Math.random()*100-50);
+            img.set({ 
+                left: x, top: y, 
+                originX: 'center', originY: 'center',
+                _originalData: dataURL // 核心：在这里无损保存 Base64
+            });
             canvas.add(img).setActiveObject(img);
         }, { crossOrigin: 'anonymous' });
     }
 
+    // 拖拽导入逻辑
     function initDragAndDrop() {
         const overlay = document.getElementById('drag-overlay');
         window.addEventListener('dragenter', () => overlay.style.display = 'flex');
@@ -312,17 +340,18 @@
         });
     }
 
+    // 批量执行
     async function runBatch() {
         const count = parseInt(document.getElementById('runCount').value) || 1;
         const key = document.getElementById('apiKey').value;
-        if (!key) return alert("请填写 API Key");
+        if (!key) return alert("请先输入 API 密钥");
 
         const btn = document.getElementById('runBtn');
         const status = document.getElementById('status');
         btn.disabled = true;
 
         for (let i = 1; i <= count; i++) {
-            status.innerText = `批量任务: ${i} / ${count}`;
+            status.innerText = `批量生成中: ${i} / ${count}`;
             try {
                 const b64 = await callAPI(key);
                 if (b64) {
@@ -330,15 +359,20 @@
                     addImageToCanvas(fullData);
                     if (saveDirHandle) await autoSave(b64, i);
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                console.error(e); 
+                status.innerText = "❌ 运行中断，检查网络或 Key"; 
+                break; 
+            }
         }
-        status.innerText = "✅ 原画任务全部完成";
+        status.innerText = "✨ 批量生成任务已完成";
         btn.disabled = false;
     }
 
+    // 核心 API 调用 (三模精准对齐)
     async function callAPI(key) {
         const type = document.getElementById('apiType').value;
-        const prompt = document.getElementById('prompt').value || "high quality masterpiece";
+        const promptTxt = document.getElementById('prompt').value || "high quality masterpiece";
         
         let w, h;
         if (slotRatio) {
@@ -350,16 +384,34 @@
         }
 
         let url, body;
-        if (type === 'gemini') {
-            url = `https://vip.123everything.com/v1beta/models/gemini-3-pro-image-preview:generateContent`;
-            let parts = [{ text: prompt }];
+
+        if (type === 'flash') {
+            url = `https://vip.123everything.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent`;
+            let parts = [{ text: promptTxt }];
             for (let n = 1; n <= 4; n++) {
                 if(referenceData[n]) parts.push({ inlineData: { mimeType: "image/png", data: referenceData[n].split(',')[1] } });
             }
             body = JSON.stringify({ contents: [{ parts }], generationConfig: { width: w, height: h } });
-        } else {
-            url = `https://vip.123everything.com/v1/images/generations`;
-            body = JSON.stringify({ prompt: prompt, n: 1, size: `${w}x${h}`, model: "dall-e-3", response_format: "b64_json" });
+
+        } else if (type === 'openai') {
+            // 对话接口适配微调
+            url = `https://vip.123everything.com/v1/chat/completions`;
+            body = JSON.stringify({ 
+                model: "dall-e-3", 
+                messages: [{ 
+                    role: "user", 
+                    content: `Please generate a ${w}x${h} image based on: ${promptTxt}. Return the result as a base64 string.` 
+                }],
+                response_format: { "type": "base64" } // 很多中转支持此写法强制返回 base64
+            });
+
+        } else if (type === 'pro') {
+            url = `https://vip.123everything.com/v1beta/models/gemini-3-pro-image-preview:generateContent`;
+            let parts = [{ text: promptTxt }];
+            for (let n = 1; n <= 4; n++) {
+                if(referenceData[n]) parts.push({ inlineData: { mimeType: "image/png", data: referenceData[n].split(',')[1] } });
+            }
+            body = JSON.stringify({ contents: [{ parts }], generationConfig: { width: w, height: h } });
         }
 
         const res = await fetch(url, {
@@ -367,23 +419,46 @@
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
             body: body
         });
+        
         const data = await res.json();
-        return type === 'gemini' ? data.candidates[0].content.parts[0].inlineData.data : data.data[0].b64_json;
+        
+        // 数据解析兼容逻辑
+        if (type === 'flash' || type === 'pro') {
+            return data.candidates[0].content.parts[0].inlineData.data;
+        } else {
+            // OpenAI 接口微调解析：
+            // 1. 如果返回的是标准 image/generations 结构的代理：data.data[0].b64_json
+            // 2. 如果返回的是 chat/completions 包装结构的代理：data.choices[0].message.content
+            if (data.data && data.data[0].b64_json) return data.data[0].b64_json;
+            if (data.choices && data.choices[0].message.content) {
+                // 有些模型会在 content 里加 Markdown 格式，需要清洗出纯 Base64
+                return data.choices[0].message.content.replace(/[^A-Za-z0-9+/=]/g, "");
+            }
+            return null;
+        }
     }
 
+    // 本地文件夹自动保存
     async function pickSaveDirectory() {
-        try { saveDirHandle = await window.showDirectoryPicker(); document.getElementById('dir-name').innerText = "✅ " + saveDirHandle.name; } catch (e) {}
+        try { 
+            saveDirHandle = await window.showDirectoryPicker(); 
+            document.getElementById('dir-name').innerText = "📁 已关联: " + saveDirHandle.name; 
+        } catch (e) {
+            console.log("用户取消了目录选择");
+        }
     }
 
     async function autoSave(b64, idx) {
-        const name = `nezha_raw_${Date.now()}_${idx}.png`;
-        const handle = await saveDirHandle.getFileHandle(name, { create: true });
-        const writable = await handle.createWritable();
-        const bytes = atob(b64);
-        const arr = new Uint8Array(bytes.length);
-        for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
-        await writable.write(new Blob([arr], { type: 'image/png' }));
-        await writable.close();
+        try {
+            const fileName = `nezha_${Date.now()}_batch_${idx}.png`;
+            const handle = await saveDirHandle.getFileHandle(fileName, { create: true });
+            const writable = await handle.createWritable();
+            const bytes = atob(b64);
+            const arrBuffer = new Uint8Array(bytes.length);
+            for (let i = 0; i < bytes.length; i++) arrBuffer[i] = bytes.charCodeAt(i);
+            await writable.write(new Blob([arrBuffer], { type: 'image/png' }));
+            await writable.close();
+        } catch (e) { console.error("自动保存失败", e); }
     }
 
     function deleteSelected() {
@@ -397,8 +472,7 @@
 
     function exportCanvas() {
         const link = document.createElement('a');
-        link.download = `nezha-board-high-res.png`;
-        // 增加倍率导出，确保看板整体清晰
+        link.download = `nezha_capture_${Date.now()}.png`;
         link.href = canvas.toDataURL({ multiplier: 2, format: 'png' });
         link.click();
     }
